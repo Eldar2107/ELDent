@@ -65,7 +65,7 @@ def seed_initial_data():
                     experience_years=8,
                     bio="Estetik diş düzümü və uşaq ortodontiyası üzrə beynəlxalq sertifikatlı həkim.",
                     rating=4.8,
-                    avatar_url="https://images.unsplash.com/photo-1594824813580-044eb98522e8?auto=format&fit=crop&w=600&q=80",
+                    avatar_url="https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80",
                     is_available=True
                 ),
                 Doctor(
