@@ -3,7 +3,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Sistem asılılıqları
+# Sistem paketləri
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -11,11 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Python asılılıqları
-COPY requirements.txt .
+COPY 02_Backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Mənbə kodlarını kopyala
-COPY . .
+COPY 02_Backend .
 
 EXPOSE 8000
 

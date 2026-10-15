@@ -1,19 +1,19 @@
-# Stage 1: Build React SPA
+# Stage 1: Build React Web SPA
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json ./
+COPY 03_Frontend/web/package.json ./
 RUN npm install
 
-COPY . .
+COPY 03_Frontend/web/ .
 RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY ../04_Deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY 04_Deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
