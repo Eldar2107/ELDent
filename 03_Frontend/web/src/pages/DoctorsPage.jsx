@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Search, Star, Award, Calendar } from 'lucide-react';
 import { doctorsAPI } from '../services/api';
 
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80";
+
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState([]);
   const [search, setSearch] = useState('');
@@ -38,7 +40,7 @@ export default function DoctorsPage() {
               placeholder="Həkim adı və ya ixtisas axtar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white shadow-sm"
             />
           </div>
 
@@ -49,8 +51,8 @@ export default function DoctorsPage() {
                 onClick={() => setSelectedSpecialty(spec)}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                   selectedSpecialty === spec
-                    ? 'bg-sky-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:border-slate-300'
                 }`}
               >
                 {spec}
@@ -62,16 +64,21 @@ export default function DoctorsPage() {
         {/* Doctors Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredDoctors.map(doc => (
-            <div key={doc.id} className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div key={doc.id} className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-hover-effect flex flex-col justify-between group">
               <div>
-                <div className="h-56 overflow-hidden relative">
-                  <img src={doc.avatar_url} alt={doc.full_name} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-bold text-amber-500 flex items-center gap-1 shadow-sm">
+                <div className="h-64 overflow-hidden relative bg-slate-100">
+                  <img
+                    src={doc.avatar_url || DEFAULT_AVATAR}
+                    alt={doc.full_name}
+                    onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_AVATAR; }}
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-amber-500 flex items-center gap-1 shadow-sm">
                     <Star className="w-3.5 h-3.5 fill-amber-500" /> {doc.rating}
                   </div>
                 </div>
                 <div className="p-5">
-                  <h3 className="text-base font-bold text-slate-900">{doc.full_name}</h3>
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{doc.full_name}</h3>
                   <p className="text-xs font-semibold text-sky-600 mt-0.5">{doc.specialty}</p>
                   <p className="text-xs text-slate-500 mt-2.5 line-clamp-3 leading-relaxed">{doc.bio}</p>
                 </div>
@@ -84,7 +91,7 @@ export default function DoctorsPage() {
                 </div>
                 <Link
                   to={`/booking?doctorId=${doc.id}`}
-                  className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+                  className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm shadow-sky-600/20"
                 >
                   <Calendar className="w-3.5 h-3.5" /> Randevu Götür
                 </Link>
