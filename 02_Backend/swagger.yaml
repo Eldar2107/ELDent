@@ -1,0 +1,385 @@
+openapi: 3.0.3
+info:
+  title: ELDent Stomatoloji Rezervasiya Sistemi REST API
+  description: Onlayn stomatoloq seçimi, xidmətlər və randevu rezervasiya sistemi üçün rəsmi OpenAPI spesifikasiyası.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Lokal İnkişaf Serveri
+  - url: http://api.eldent.az/api/v1
+    description: Production Serveri
+
+tags:
+  - name: Autentifikasiya
+    description: Qeydiyyat, Giriş və JWT Token idarəetməsi
+  - name: Həkimlər
+    description: Həkimlərin siyahısı, filtrlənməsi və CRUD
+  - name: Xidmətlər
+    description: Stomatoloji xidmətlər və qiymətlər
+  - name: Randevular
+    description: Randevu rezervasiyası, boş saatlar və ləğv etmə
+  - name: Admin İdarəetmə
+    description: İdarəetmə paneli analitikası və randevu statusları
+
+paths:
+  /auth/register:
+    post:
+      tags: [Autentifikasiya]
+      summary: Yeni xəstə qeydiyyatı
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: İstifadəçi uğurla yaradıldı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '400':
+          description: E-poçt artıq mövcuddur
+
+  /auth/login-json:
+    post:
+      tags: [Autentifikasiya]
+      summary: E-poçt və şifrə ilə sistemə daxil olmaq
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: JWT Access Token və profil məlumatı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Yanlış autentifikasiya məlumatları
+
+  /auth/me:
+    get:
+      tags: [Autentifikasiya]
+      summary: Cari istifadəçi profilini almaq
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil məlumatları
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+
+  /doctors/:
+    get:
+      tags: [Həkimlər]
+      summary: Bütün həkimlərin siyahısı
+      parameters:
+        - name: specialty
+          in: query
+          schema:
+            type: string
+          description: İxtisasa görə filtr
+        - name: available_only
+          in: query
+          schema:
+            type: boolean
+          description: Yalnız aktiv həkimlər
+      responses:
+        '200':
+          description: Həkimlər siyahısı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DoctorOut'
+    post:
+      tags: [Həkimlər]
+      summary: Yeni həkim əlavə etmək (Yalnız Admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoctorCreate'
+      responses:
+        '201':
+          description: Həkim əlavə edildi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorOut'
+
+  /services/:
+    get:
+      tags: [Xidmətlər]
+      summary: Bütün stomatoloji xidmətlərin siyahısı
+      responses:
+        '200':
+          description: Xidmətlər siyahısı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceOut'
+    post:
+      tags: [Xidmətlər]
+      summary: Yeni xidmət yaratmaq (Yalnız Admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCreate'
+      responses:
+        '201':
+          description: Xidmət yaradıldı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceOut'
+
+  /appointments/:
+    post:
+      tags: [Randevular]
+      summary: Randevu rezervasiyası etmək
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCreate'
+      responses:
+        '201':
+          description: Randevu rezervasiya olundu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentOut'
+        '409':
+          description: Seçilmiş vaxt artıq məşğuldur
+
+  /appointments/my:
+    get:
+      tags: [Randevular]
+      summary: Daxil olmuş xəstənin şəxsi randevuları
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Randevu siyahısı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentOut'
+
+  /appointments/{id}/cancel:
+    patch:
+      tags: [Randevular]
+      summary: Randevunu ləğv etmək
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Randevu statusu ləğv edildi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentOut'
+
+  /admin/dashboard-stats:
+    get:
+      tags: [Admin İdarəetmə]
+      summary: Analitik göstəricilər və qəbul statistikası
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: İdarəetmə statistikası
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserCreate:
+      type: object
+      required: [email, full_name, password]
+      properties:
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        phone_number:
+          type: string
+        password:
+          type: string
+
+    UserLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UserOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        full_name:
+          type: string
+        phone_number:
+          type: string
+        is_active:
+          type: boolean
+        is_admin:
+          type: boolean
+
+    Token:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserOut'
+
+    DoctorCreate:
+      type: object
+      required: [full_name, specialty]
+      properties:
+        full_name:
+          type: string
+        specialty:
+          type: string
+        experience_years:
+          type: integer
+        bio:
+          type: string
+        rating:
+          type: number
+        avatar_url:
+          type: string
+        is_available:
+          type: boolean
+
+    DoctorOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        specialty:
+          type: string
+        experience_years:
+          type: integer
+        bio:
+          type: string
+        rating:
+          type: number
+        avatar_url:
+          type: string
+        is_available:
+          type: boolean
+
+    ServiceCreate:
+      type: object
+      required: [title, price]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        duration_minutes:
+          type: integer
+        category:
+          type: string
+
+    ServiceOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        duration_minutes:
+          type: integer
+        category:
+          type: string
+
+    AppointmentCreate:
+      type: object
+      required: [doctor_id, service_id, appointment_date, appointment_time]
+      properties:
+        doctor_id:
+          type: integer
+        service_id:
+          type: integer
+        appointment_date:
+          type: string
+          example: '2026-10-20'
+        appointment_time:
+          type: string
+          example: '14:00'
+        notes:
+          type: string
+
+    AppointmentOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        doctor_id:
+          type: integer
+        service_id:
+          type: integer
+        appointment_date:
+          type: string
+        appointment_time:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED]
